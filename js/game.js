@@ -1,5 +1,8 @@
 "use strict";
 
+//convenience objects
+
+//game screen
 var gameProperties = {
     screenWidth: 640,
     screenHeight: 480,
@@ -7,11 +10,13 @@ var gameProperties = {
     padding: 30,
 };
 
+//just two states 
 var states = {
     main: "main",
     game: "game",
 };
 
+//this is all the graphics we will use
 var graphicAssets = {
     ship: { URL: 'assets/ship.png', name: 'ship' },
     bullet: { URL: 'assets/bullet.png', name: 'bullet' },
@@ -26,11 +31,13 @@ var graphicAssets = {
     explosionSmall: { URL: 'assets/explosionSmall.png', name: 'explosionSmall', width: 41, height: 41, frames: 8 },
 };
 
+//sounds
 var soundAssets = {
     fire: { URL: ['assets/fire.m4a', 'assets/fire.ogg'], name: 'fire' },
     destroyed: { URL: ['assets/destroyed.m4a', 'assets/destroyed.ogg'], name: 'destroyed' },
 };
 
+//our ship
 var shipProperties = {
     startX: gameProperties.screenWidth * 0.5,
     startY: gameProperties.screenHeight * 0.5,
@@ -43,6 +50,7 @@ var shipProperties = {
     blinkDelay: 0.2,
 };
 
+//bullets
 var bulletProperties = {
     speed: 400,
     interval: 250,
@@ -50,6 +58,7 @@ var bulletProperties = {
     maxCount: 30,
 };
 
+//asteroids
 var asteroidProperties = {
     startingAsteroids: 4,
     maxAsteroids: 20,
@@ -60,10 +69,12 @@ var asteroidProperties = {
     asteroidSmall: { minVelocity: 50, maxVelocity: 300, minAngularVelocity: 0, maxAngularVelocity: 200, score: 100, explosion: 'explosionSmall' },
 };
 
+//classic looking fonts
 var fontAssets = {
     counterFontStyle: { font: '20px Arial', fill: '#FFFFFF', align: 'center' },
 };
 
+//setup our main state
 var gameState = function (game) {
     this.shipSprite;
     this.shipIsInvulnerable;
@@ -91,6 +102,7 @@ var gameState = function (game) {
 
 gameState.prototype = {
 
+    //load our assets
     preload: function () {
         game.load.image(graphicAssets.asteroidLarge.name, graphicAssets.asteroidLarge.URL);
         game.load.image(graphicAssets.asteroidMedium.name, graphicAssets.asteroidMedium.URL);
@@ -113,7 +125,8 @@ gameState.prototype = {
         this.asteroidsCount = asteroidProperties.startingAsteroids;
         this.shipLives = shipProperties.startingLives;
         this.score = 0;
-
+        
+        //this will be for mobile in the future once i get controls worked out
         /*game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         game.scale.pageAlignHorizontally = true;
         game.scale.pageAlignVertically = true;*/
@@ -126,7 +139,9 @@ gameState.prototype = {
         this.initKeyboard();
         this.resetAsteroids();
     },
-
+    
+    //every frame
+    //try to keep as light as possible for perf
     update: function () {
         this.checkPlayerInput();
         this.checkBoundaries(this.shipSprite);
@@ -181,6 +196,8 @@ gameState.prototype = {
     },
 
     initPhysics: function () {
+        
+        //use simple physics for perf
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         game.physics.enable(this.shipSprite, Phaser.Physics.ARCADE);
@@ -197,7 +214,8 @@ gameState.prototype = {
         this.asteroidGroup.enableBody = true;
         this.asteroidGroup.physicsBodyType = Phaser.Physics.ARCADE;
     },
-
+    
+    //controls
     initKeyboard: function () {
         this.key_left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         this.key_right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
@@ -206,15 +224,15 @@ gameState.prototype = {
     },
 
     checkPlayerInput: function () {
-        if (this.key_left.isDown) {
+        if (this.key_left.isDown || game.input.keyboard.isDown(Phaser.Keyboard.A)) {
             this.shipSprite.body.angularVelocity = -shipProperties.angularVelocity;
-        } else if (this.key_right.isDown) {
+        } else if (this.key_right.isDown || game.input.keyboard.isDown(Phaser.Keyboard.D)) {
             this.shipSprite.body.angularVelocity = shipProperties.angularVelocity;
         } else {
             this.shipSprite.body.angularVelocity = 0;
         }
 
-        if (this.key_thrust.isDown) {
+        if (this.key_thrust.isDown || game.input.keyboard.isDown(Phaser.Keyboard.W)) {
             game.physics.arcade.accelerationFromRotation(this.shipSprite.rotation, shipProperties.acceleration, this.shipSprite.body.acceleration);
         } else {
             this.shipSprite.body.acceleration.set(0);
@@ -381,7 +399,7 @@ var mainState = function (game) {
 mainState.prototype = {
     
     create: function () {
-        var startInstructions = 'Click to Start -\n\nUP arrow key for thrust.\n\nLEFT and RIGHT arrow keys to turn.\n\nSPACE key to fire.';
+        var startInstructions = 'Click to Start \n\nUP or W for thrust.\n\nLEFT or A and RIGHT or D to turn.\n\nSPACE key to fire.';
 
         this.tf_start = game.add.text(game.world.centerX, game.world.centerY, startInstructions, fontAssets.counterFontStyle);
         this.tf_start.align = 'center';
